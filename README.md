@@ -12,4 +12,4 @@ It has only simple rules of chiness chess , you can play with the other people t
 
 # Comfirm
 
-The app is just a trainproject, welcome everyone give me more sugesstions. Thanks for watching.
+> The app is just a trainproject, welcome everyone give me more sugesstions. Thanks for watching.
