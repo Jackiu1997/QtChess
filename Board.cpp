@@ -15,10 +15,15 @@ Board::Board(QWidget *parent) :
         _s[i].init(i);
     }
 
+    // 初始化参数
     _selectid = -1;
     _bRedTurn = true;
 	pointLeftTop.setX(115);
 	pointLeftTop.setY(75);
+
+    // 加载图片资源（入内存，加快加载速度）
+    boardImg.load("://res/board.png");
+    stoneImg.load("://res/stones.png");
 }
 
 void Board::paintEvent(QPaintEvent *event)
@@ -29,9 +34,7 @@ void Board::paintEvent(QPaintEvent *event)
     _r = d / 2;
 
 	// 棋盘绘制
-    QImage board("://res/board.png");
-	painter.drawImage(0, 0, board);
-
+    painter.drawImage(0, 0, boardImg);
     // 绘制棋子
     for(int i = 0; i < 32; i++)
     {
@@ -47,8 +50,7 @@ void Board::drawStone(QPainter &painter, int id)
     QRect paintRect = QRect(c.x() - _r, c.y() - _r, _r * 2, _r * 2);
 	QRect imageRect = _s[id].getImageRect();
 
-    QImage stone("://res/stones.png");
-	painter.drawImage(paintRect, stone, imageRect);
+    painter.drawImage(paintRect, stoneImg, imageRect);
 }
 
 QPoint Board::center(int row, int col)

@@ -20,6 +20,8 @@ public:
     QPoint center(int row, int col);
     QPoint center(int id);
 
+    QImage boardImg, stoneImg;
+
     bool isStone(int row, int col);
     int getStoneCountAtLine(int, int, int, int);
     // 棋子移动规则
