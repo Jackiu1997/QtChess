@@ -1,6 +1,8 @@
 ﻿#include "Board.h"
 #include <QPainter>
 #include <QMouseEvent>
+#include <QMessageBox>
+#include <QIcon>
 
 Board::Board(QWidget *parent) :
     QWidget(parent)
@@ -9,19 +11,29 @@ Board::Board(QWidget *parent) :
 	this->setMaximumSize(900, 900);
 	this->setMinimumSize(900, 900);
 
-	// 初始化棋子
+    QIcon icon("://res/icon.png");
+    this->setWindowIcon(icon);
+
+    initBoard();
+}
+
+// start game init
+void Board::initBoard(){
+    // stones init
     for(int i = 0; i < 32; i++)
     {
         _s[i].init(i);
     }
 
-    // 初始化参数
+    // data init
+    int d = 84;
+    _r = d / 2;
     _selectid = -1;
     _bRedTurn = true;
-	pointLeftTop.setX(115);
-	pointLeftTop.setY(75);
+    pointLeftTop.setX(115);
+    pointLeftTop.setY(75);
 
-    // 加载图片资源（入内存，加快加载速度）
+    // image init
     boardImg.load("://res/board.png");
     stoneImg.load("://res/stones.png");
 }
@@ -30,19 +42,85 @@ void Board::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
 
-    int d = 84;
-    _r = d / 2;
+    QString message;
 
-	// 棋盘绘制
-    painter.drawImage(0, 0, boardImg);
-    // 绘制棋子
-    for(int i = 0; i < 32; i++)
-    {
-        drawStone(painter, i);
+    if(judgeWinner(message)) {
+        // 胜利信息框
+        QMessageBox::information(this, "Winner", message);
+        // 重新开始游戏信息框
+        if (QMessageBox::Yes == QMessageBox::question(this,tr("Winner"),tr("Do you want to restart?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::Yes)) {
+            initBoard();
+        }
+        else {
+            this->close();
+        }
+    }
+    else {
+        // 棋盘绘制
+        painter.drawImage(0, 0, boardImg);
+        // 绘制棋子
+        for(int i = 0; i < 32; i++)
+        {
+            drawStone(painter, i);
+        }
     }
 }
 
-// 绘制棋子模块
+void Board::mouseReleaseEvent(QMouseEvent *ev)
+{
+    QPoint pt = ev->pos();
+    // 像素值转化为行列值
+    int row, col;
+    bool bRet = getRowCol(pt, row, col);
+    // 点到棋盘外区域
+    if(!bRet) return;
+
+    int i;
+    bool tag = false;
+    // 获取第一次点击的棋子id
+    int clickid = -1;
+
+    for(i = 0; i < 32; i++)
+    {
+        if(_s[i]._row == row && _s[i]._col == col && !_s[i]._dead)
+        {
+            tag = true;
+            break;
+        }
+    }
+
+    if(tag) clickid = i;
+
+    // 如果一次点击
+    if(_selectid == -1)
+    {
+        if(clickid != -1)
+        {
+            if(_bRedTurn == _s[clickid]._red)
+            {
+                _selectid = clickid;
+                update();
+            }
+        }
+    }
+    // 如果二次点击
+    else
+    {
+        if(canMove(_selectid, row, col, clickid))
+        {
+            _s[_selectid]._row = row;
+            _s[_selectid]._col = col;
+            if(clickid != -1)
+            {
+               _s[clickid]._dead = true;
+            }
+            _selectid = -1;
+            _bRedTurn = !_bRedTurn;
+            update();
+        }
+    }
+}
+
 void Board::drawStone(QPainter &painter, int id)
 {
     if(_s[id]._dead) return;
@@ -66,8 +144,17 @@ QPoint Board::center(int id)
     return center(_s[id]._row, _s[id]._col);
 }
 
+bool Board::judgeWinner(QString &s) {
+    if(_s[4]._dead) {
+        s = "Black Win!";
+    }
+    else if(_s[20]._dead) {
+        s = "Black Win!";
+    }
+    else return false;
+    return true;
+}
 
-// 象棋规则模块
 bool Board::canMove(int moveid, int row, int col, int killid)
 {
     // 判断棋子移动目标选择可行性
@@ -107,37 +194,6 @@ bool Board::canMove(int moveid, int row, int col, int killid)
         break;
     }
     return true;
-}
-
-bool Board::isStone(int row, int col) {
-    for(int i = 0; i < 32; i++) {
-       if(_s[i]._row == row && _s[i]._col == col) return true;
-    }
-    return false;
-}
-
-int Board::getStoneCountAtLine(int row1, int col1, int row2, int col2)
-{
-    int ret = 0;
-    if(row1 != row2 && col1 != col2) return -1;
-    if(row1 == row2 && col1 == col2) return -1;
-
-    if(row1 == row2) {
-        int min = col1 < col2 ? col1 : col2;
-        int max = col1 > col2 ? col1 : col2;
-        for(int col = min+1; col < max; col++) {
-            if(isStone(row1, col)) ret++;
-        }
-    }
-    else {
-        int min = row1 < row2 ? row1 : row2;
-        int max = row1 > row2 ? row1 : row2;
-        for(int row = min+1; row < max; row++) {
-            if(isStone(row, col1)) ret++;
-        }
-    }
-
-    return ret;
 }
 
 // JIANG
@@ -308,7 +364,7 @@ bool Board::canMoveBing(int moveid, int row, int col)
     return false;
 }
 
-// 获取鼠标点击棋子行列
+// get mouse click pos in board
 bool Board::getRowCol(QPoint pt, int &row, int &col)
 {
     for(row = 0; row <= 9; row++)
@@ -325,57 +381,33 @@ bool Board::getRowCol(QPoint pt, int &row, int &col)
     return false;
 }
 
-void Board::mouseReleaseEvent(QMouseEvent *ev)
+bool Board::isStone(int row, int col) {
+    for(int i = 0; i < 32; i++) {
+       if(_s[i]._row == row && _s[i]._col == col) return true;
+    }
+    return false;
+}
+
+int Board::getStoneCountAtLine(int row1, int col1, int row2, int col2)
 {
-    QPoint pt = ev->pos();
-    // 像素值转化为行列值
-    int row, col;
-    bool bRet = getRowCol(pt, row, col);
-    // 点到棋盘外区域
-    if(!bRet) return;
+    int ret = 0;
+    if(row1 != row2 && col1 != col2) return -1;
+    if(row1 == row2 && col1 == col2) return -1;
 
-    int i;
-    bool tag = false;
-    // 获取第一次点击的棋子id
-    int clickid = -1;
-
-    for(i = 0; i < 32; i++)
-    {
-        if(_s[i]._row == row && _s[i]._col == col && !_s[i]._dead)
-        {
-            tag = true;
-            break;
+    if(row1 == row2) {
+        int min = col1 < col2 ? col1 : col2;
+        int max = col1 > col2 ? col1 : col2;
+        for(int col = min+1; col < max; col++) {
+            if(isStone(row1, col)) ret++;
+        }
+    }
+    else {
+        int min = row1 < row2 ? row1 : row2;
+        int max = row1 > row2 ? row1 : row2;
+        for(int row = min+1; row < max; row++) {
+            if(isStone(row, col1)) ret++;
         }
     }
 
-    if(tag) clickid = i;
-
-    // 如果一次点击
-    if(_selectid == -1)
-    {
-        if(clickid != -1)
-        {
-            if(_bRedTurn == _s[clickid]._red)
-            {
-                _selectid = clickid;
-                update();
-            }
-        }
-    }
-    // 如果二次点击
-    else
-    {
-        if(canMove(_selectid, row, col, clickid))
-        {
-            _s[_selectid]._row = row;
-            _s[_selectid]._col = col;
-            if(clickid != -1)
-            {
-               _s[clickid]._dead = true;
-            }
-            _selectid = -1;
-            _bRedTurn = !_bRedTurn;
-            update();
-        }
-    }
+    return ret;
 }

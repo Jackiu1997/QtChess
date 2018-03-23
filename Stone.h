@@ -1,4 +1,4 @@
-#ifndef STONE_H
+﻿#ifndef STONE_H
 #define STONE_H
 
 #include <QString>
@@ -17,10 +17,10 @@ public:
 	bool _red;
 	TYPE _type;
 
-	Stone();
+    /* init stone data */
 	void init(int id);
+    /* get stone rect on stones.png */
 	QRect getImageRect();
-    
 };
 
 #endif // STONE_H

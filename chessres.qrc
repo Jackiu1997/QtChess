@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>res/board.png</file>
         <file>res/stones.png</file>
+        <file>res/icon.png</file>
     </qresource>
 </RCC>
