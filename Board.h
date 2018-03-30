@@ -2,6 +2,10 @@
 #define BOARD_H
 
 #include <QWidget>
+#include <QIcon>
+#include <QPainter>
+#include <QMouseEvent>
+#include <QMessageBox>
 #include "Stone.h"
 
 class Board : public QWidget
@@ -13,12 +17,12 @@ public:
     void paintEvent(QPaintEvent *event);
     void mouseReleaseEvent(QMouseEvent *ev);
 
-    // init game
+    /* init game */
     void initBoard();
 
-    // draw functions
+    /* draw functions */
     void drawStone(QPainter &painter, int _id);
-
+    void drawTags(QPainter &painter);
     QPoint center(int row, int col);
     QPoint center(int id);
 
@@ -39,6 +43,8 @@ public:
     bool isStone(int row, int col);
     bool getRowCol(QPoint pt, int &row, int &col);
     int getStoneCountAtLine(int, int, int, int);
+    void click(int row, int col);
+
 private:
     /* game data */
     Stone _s[32];
@@ -48,7 +54,10 @@ private:
     QPoint pointLeftTop;
 
     /* resource data */
-    QImage boardImg, stoneImg;
+    QImage boardImg;
+    QImage stoneImg;
+    QImage clickedImg;
+    QImage tagImg;
 };
 
 #endif // BOARD_H

@@ -32,3 +32,4 @@ HEADERS  += Board.h \
 
 RESOURCES += \
     chessres.qrc
+

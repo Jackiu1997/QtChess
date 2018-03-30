@@ -1,15 +1,11 @@
 ﻿#include "Board.h"
-#include <QPainter>
-#include <QMouseEvent>
-#include <QMessageBox>
-#include <QIcon>
 
 Board::Board(QWidget *parent) :
     QWidget(parent)
 {
 	// 固定窗口大小
-	this->setMaximumSize(900, 900);
-	this->setMinimumSize(900, 900);
+    this->setMaximumSize(1120, 900);
+    this->setMinimumSize(1120, 900);
 
     QIcon icon("://res/icon.png");
     this->setWindowIcon(icon);
@@ -18,7 +14,8 @@ Board::Board(QWidget *parent) :
 }
 
 // start game init
-void Board::initBoard(){
+void Board::initBoard()
+{
     // stones init
     for(int i = 0; i < 32; i++)
     {
@@ -36,6 +33,8 @@ void Board::initBoard(){
     // image init
     boardImg.load("://res/board.png");
     stoneImg.load("://res/stones.png");
+    clickedImg.load("://res/clickedstones.png");
+    tagImg.load("://res/tags.png");
 }
 
 void Board::paintEvent(QPaintEvent *event)
@@ -45,9 +44,9 @@ void Board::paintEvent(QPaintEvent *event)
     QString message;
 
     if(judgeWinner(message)) {
-        // 胜利信息框
+        // winner messsagebox
         QMessageBox::information(this, "Winner", message);
-        // 重新开始游戏信息框
+        // restart game messagebox
         if (QMessageBox::Yes == QMessageBox::question(this,tr("Winner"),tr("Do you want to restart?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::Yes)) {
             initBoard();
         }
@@ -56,28 +55,32 @@ void Board::paintEvent(QPaintEvent *event)
         }
     }
     else {
-        // 棋盘绘制
+        // draw board
         painter.drawImage(0, 0, boardImg);
-        // 绘制棋子
-        for(int i = 0; i < 32; i++)
-        {
-            drawStone(painter, i);
-        }
+        drawTags(painter);
+
+        // draw stones
+        for(int i = 0; i < 32; i++) drawStone(painter, i);
     }
 }
 
 void Board::mouseReleaseEvent(QMouseEvent *ev)
 {
     QPoint pt = ev->pos();
-    // 像素值转化为行列值
+    // from pixel number to row and col
     int row, col;
     bool bRet = getRowCol(pt, row, col);
-    // 点到棋盘外区域
+    // out of board
     if(!bRet) return;
+    // in the borad
+    else click(row, col);
+}
 
+void Board::click(int row, int col)
+{
     int i;
     bool tag = false;
-    // 获取第一次点击的棋子id
+    // get the first time clicked id
     int clickid = -1;
 
     for(i = 0; i < 32; i++)
@@ -91,7 +94,6 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
 
     if(tag) clickid = i;
 
-    // 如果一次点击
     if(_selectid == -1)
     {
         if(clickid != -1)
@@ -103,7 +105,6 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
             }
         }
     }
-    // 如果二次点击
     else
     {
         if(canMove(_selectid, row, col, clickid))
@@ -121,14 +122,31 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
     }
 }
 
+void Board::drawTags(QPainter &painter)
+{
+    // draw tags
+    QRect redTagPaintRect(900, 100, 220, 84);
+    QRect blackTagPaintRect(900, 716, 220, 84);
+    if(_bRedTurn) {
+        painter.drawImage(redTagPaintRect, tagImg, QRect(220, 0, 220, 84));
+        painter.drawImage(blackTagPaintRect, tagImg, QRect(0, 84, 220, 84));
+    }
+    else {
+        painter.drawImage(redTagPaintRect, tagImg, QRect(0, 0, 220, 84));
+        painter.drawImage(blackTagPaintRect, tagImg, QRect(220, 84, 220, 84));
+    }
+}
+
 void Board::drawStone(QPainter &painter, int id)
 {
     if(_s[id]._dead) return;
+
     QPoint c = center(id);
     QRect paintRect = QRect(c.x() - _r, c.y() - _r, _r * 2, _r * 2);
 	QRect imageRect = _s[id].getImageRect();
 
-    painter.drawImage(paintRect, stoneImg, imageRect);
+    if(id != _selectid) painter.drawImage(paintRect, stoneImg, imageRect);
+    else painter.drawImage(paintRect, clickedImg, imageRect);
 }
 
 QPoint Board::center(int row, int col)
