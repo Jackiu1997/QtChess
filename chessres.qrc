@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/">
         <file>res/stones.png</file>
-        <file>res/icon.png</file>
         <file>res/clickedstones.png</file>
         <file>res/tags.png</file>
         <file>res/board.png</file>
+        <file>res/icon.ico</file>
     </qresource>
 </RCC>

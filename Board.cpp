@@ -7,8 +7,7 @@ Board::Board(QWidget *parent) :
     this->setMaximumSize(1120, 900);
     this->setMinimumSize(1120, 900);
 
-    QIcon icon("://res/icon.png");
-    this->setWindowIcon(icon);
+    this->setWindowIcon(QIcon("://res/icon.ico"));
 
     initBoard();
 }
