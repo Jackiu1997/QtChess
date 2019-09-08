@@ -10,6 +10,8 @@ It is a Chinese Chess game, developed by Jackiu in *2018.3.22*.
 
 It has only simple rules of chiness chess , you can play with the other people together or just play with yourself.
 
-# Comfirm
+# Screenshots
+
+![Home](screenshots/page.png)
 
 > The app is just a trainproject, welcome everyone give me more sugesstions. Thanks for watching.
